@@ -46,14 +46,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadModel(file) {
+        console.log(`Loading model: ${file}`);
         if (currentObject) {
             scene.remove(currentObject);
         }
 
         const loader = new THREE.OBJLoader();
         loader.load(
-            `/download/${file}`,
+            `uploads/${file}`,
             (object) => {
+                console.log('Model loaded successfully:', object);
                 currentObject = object;
                 scene.add(currentObject);
                 centerAndScale(currentObject);
@@ -81,30 +83,41 @@ document.addEventListener('DOMContentLoaded', () => {
         object.scale.set(scale, scale, scale);
     }
 
-    fetch('/files')
-        .then(response => response.json())
-        .then(files => {
-            files.forEach(file => {
-                const fileItem = document.createElement('div');
-                fileItem.classList.add('file-item');
+    const files = ['VWBug.obj', 'boss.obj', 'boss8.obj', 'david_remesh.obj'];
 
-                const fileName = document.createElement('span');
-                fileName.textContent = file;
-                fileName.addEventListener('click', () => {
-                    loadModel(file);
-                });
+    if (files.length === 0) {
+        fileList.innerHTML = '<p>No OBJ files found</p>';
+    } else {
+        files.forEach(file => {
+            const fileItem = document.createElement('div');
+            fileItem.classList.add('file-item');
 
-                const downloadLink = document.createElement('a');
-                downloadLink.href = `/download/${file}`;
-                downloadLink.textContent = 'Download';
-                downloadLink.classList.add('download-link');
-                
-                fileItem.appendChild(fileName);
-                fileItem.appendChild(downloadLink);
-                fileList.appendChild(fileItem);
-            });
+            const fileName = document.createElement('span');
+            fileName.textContent = file;
+            
+            const downloadLink = document.createElement('a');
+            downloadLink.href = `uploads/${file}`;
+            downloadLink.textContent = 'Download';
+            downloadLink.classList.add('download-link');
+            
+            fileItem.appendChild(fileName);
+            fileItem.appendChild(downloadLink);
+            fileList.appendChild(fileItem);
         });
 
+        fileList.addEventListener('click', (event) => {
+            if (event.target.tagName === 'SPAN') {
+                loadModel(event.target.textContent);
+            }
+        });
+
+        // Load first available model as default
+        if (files.includes('boss.obj')) {
+            loadModel('boss.obj');
+        } else if (files.length > 0) {
+            loadModel(files[0]);
+        }
+    }
+
     initViewer();
-    loadModel('boss.obj');
 });
